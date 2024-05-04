@@ -23,7 +23,7 @@ jobs:
       - name: Install packages for install repository
         run: apt-get install -y git sudo software-properties-common
       - name: Install required repository
-        run: apt-add-repository "deb http://archive.ubuntu.com/ubuntu/dists trusty-backports main restricted universe"
+        run: apt-add-repository "deb http://archive.ubuntu.com/ubuntu/dists/trusty-backports/ trusty-backports main restricted universe"
       - name: Install required packages
         run: apt-get update; apt-get install -y shellcheck
       - name: Execute shellcheck
