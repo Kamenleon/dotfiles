@@ -28,4 +28,4 @@ alias gc='git commit'
 # カレントディレクトリのパスをクリップボードにコピー
 alias pwdc='pwd | tr -d "\n" | pbcopy'
 
-# 追加できた確認カキコ
+
