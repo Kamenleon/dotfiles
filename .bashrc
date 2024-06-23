@@ -30,5 +30,6 @@ alias gc='git commit'
 alias pwdc='pwd | tr -d "\n" | pbcopy'
 
 export PATH="$PATH:/opt/nvim-linux64/bin"
+export RUST_BACKTRACE=1 #小さなWebBrowserで作る際に入れたRust用の設定
 
 . "$HOME/.cargo/env"
