@@ -12,7 +12,6 @@
 !/.github/**
 
 ## neovim
-/.config/nvim/plugin/**
 !/.nvim/
 !/.nvim/**
 

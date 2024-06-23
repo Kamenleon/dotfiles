@@ -1,4 +1,5 @@
 # よく使うエイリアスから各コマンドのデフォルトのオプションを設定
+alias l='ls'
 alias ls='ls -CF'
 alias ll='ls -laF --show-control-chars --color=auto'
 alias la='ls -A --show-control-chars --color=auto'
@@ -28,4 +29,6 @@ alias gc='git commit'
 # カレントディレクトリのパスをクリップボードにコピー
 alias pwdc='pwd | tr -d "\n" | pbcopy'
 
+export PATH="$PATH:/opt/nvim-linux64/bin"
 
+. "$HOME/.cargo/env"
