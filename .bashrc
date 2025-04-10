@@ -1,14 +1,17 @@
 # よく使うエイリアスから各コマンドのデフォルトのオプションを設定
-alias l='ls'
+alias n='nvim'
+alias l='ls -F'
 alias ls='ls -CF'
 alias ll='ls -laF --show-control-chars --color=auto'
 alias la='ls -A --show-control-chars --color=auto'
+# 消す、移動させる場合に確認を入れる
 alias mv='mv -i'
 alias rm='rm -i'
 alias cp='cp -i'
+alias mkdir='mkdir -p'
 
 # プロンプトの表示をカスタマイズする
-export PS1='\[\033[01;32m\]\u@\H\[\033[01;34m\] \w \$\[\033[00m\]'
+export PS1='\[\033[01;32m\]\u\[\033[01;34m\] \w \$\[\033[00m\]'
 
 # cd系の設定
 alias ..='cd ..'
@@ -29,7 +32,17 @@ alias gc='git commit'
 # カレントディレクトリのパスをクリップボードにコピー
 alias pwdc='pwd | tr -d "\n" | pbcopy'
 
-export PATH="$PATH:/opt/nvim-linux64/bin"
-export RUST_BACKTRACE=1 #小さなWebBrowserで作る際に入れたRust用の設定
+# コマンド履歴設定
+shopt -s histappend
+HISTSIZE=1000000
+HISTFILESIZE=1000000
 
-. "$HOME/.cargo/env"
+# パス設定
+export PATH="$PATH:/opt/nvim-linux64/bin"
+
+## GRAALの環境設定
+export GRAALVM_HOME=/root/.sdkman/candidates/java/22.0.2-graalce/
+
+## THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
