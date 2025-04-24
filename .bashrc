@@ -10,6 +10,9 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mkdir='mkdir -p'
 
+# WSL用、現在のフォルダを開く
+alias pwdo='explorer.exe .'
+
 # プロンプトの表示をカスタマイズする
 export PS1='\[\033[01;32m\]\u\[\033[01;34m\] \w \$\[\033[00m\]'
 
