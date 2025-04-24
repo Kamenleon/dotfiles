@@ -3,22 +3,23 @@ name: CI
 on: [push]
 
 jobs:
-  ubuntu:
+  setup:
     runs-on: ubuntu-latest
     container: ubuntu:latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Install required packages
-        run: apt-get update && apt-get install -y git sudo
-      - name: Install dotfiles
+      - uses: actions/checkout@v2
+      
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y git sudo shellcheck
+
+      - name: Run install script
         run: .bin/install.sh install
 
-  lint:
-    runs-on: ubuntu-latest
-    container: ubuntu:latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install Shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      - name: Execute shellcheck
-        run: test $(shellcheck -f gcc ~/.zshrc ~/.zsh/rc/* | grep -v "SC1036\|SC1056\|..." | tee -a /dev/stderr | wc -l) -le 1
+      - name: Run ShellCheck
+        run: |
+          shellcheck -f gcc ~/.zshrc ~/.zsh/rc/* \
+            | grep -vE "SC1036|SC1056|SC1070|SC1072|SC1073|SC1083|SC2034|SC2139|SC2148|SC1090|SC1117|SC2206|SC1009|SC2016|SC2046|SC2154" \
+            | tee /dev/stderr \
+            | wc -l | xargs -I{} test {} -le 1
