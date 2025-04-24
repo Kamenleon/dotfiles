@@ -207,6 +207,8 @@ vim.keymap.set("n", "<Space>d", function()
 	vim.api.nvim_set_current_line(updated)
 end, { noremap = true, silent = true })
 
+vim.api.nvim_set_keymap("i", "jj", "<Esc>", { noremap = true, silent = true })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
