@@ -42,7 +42,7 @@ HISTSIZE=1000000
 HISTFILESIZE=1000000
 
 # パス設定
-export PATH="$PATH:/opt/nvim-linux64/bin"
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
 ## GRAALの環境設定
 export GRAALVM_HOME=/root/.sdkman/candidates/java/22.0.2-graalce/

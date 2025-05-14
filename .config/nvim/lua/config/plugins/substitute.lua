@@ -7,7 +7,7 @@ return {
     substitute.setup()
 
     -- set keymap
-    local keymap = vim.keymap -- for conciseness
+    --local keymap = vim.keymap -- for conciseness
 
     vim.keymap.set("n", "s", substitute.operator, { desc = "Substitute with motion"})
     vim.keymap.set("n", "ss", substitute.line, { desc = "Substitute line "})
