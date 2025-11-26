@@ -18,9 +18,10 @@ return {
       },
     })
 
+    -- lspを入れる際に設定するところ
     local ensure_installed = {
-      -- 'ts_ls',
       "lua_ls",
+      "metals",
     }
 
     require 'mason-lspconfig'.setup {
@@ -39,8 +40,6 @@ return {
         },
       },
     })
-    -- vim.lsp.config("ts_ls") {
-    -- }
 
     vim.lsp.enable(ensure_installed)
   end,

@@ -1,3 +1,6 @@
+# Git に乗せたくない設定の読み込み
+[ -f "$HOME/dotfiles/.config/bashrc_private" ] && source "$HOME/dotfiles/.config/bashrc_private"
+
 # よく使うエイリアスから各コマンドのデフォルトのオプションを設定
 alias n='nvim'
 alias l='ls -F'
@@ -44,14 +47,15 @@ HISTFILESIZE=1000000
 # パス設定
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
-## GRAALの環境設定
-export GRAALVM_HOME=/root/.sdkman/candidates/java/22.0.2-graalce/
-
 ## THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+## GRAALの環境設定
+export GRAALVM_HOME=/root/.sdkman/candidates/java/22.0.2-graalce/
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 . "/root/.deno/env"
+
