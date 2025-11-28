@@ -54,8 +54,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 ## GRAALの環境設定
 export GRAALVM_HOME=/root/.sdkman/candidates/java/22.0.2-graalce/
 
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-. "/root/.deno/env"
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
