@@ -35,6 +35,10 @@ alias gco='git checkout'
 alias gf='git fetch'
 alias gc='git commit'
 alias gl='git log'
+alias gsw='git switch'
+
+# SDKMANで、Javaのバージョンを書き換えたい
+alias sdkjava11='sdk use java 11.0.27-amzn'
 
 # カレントディレクトリのパスをクリップボードにコピー
 alias pwdc='pwd | tr -d "\n" | pbcopy'
