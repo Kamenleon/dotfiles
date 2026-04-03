@@ -37,6 +37,10 @@ alias gc='git commit'
 alias gl='git log'
 alias gsw='git switch'
 
+# docker系
+alias docps='docker ps'
+alias docstopall='docker stop $(docker ps -q)'
+
 # SDKMANで、Javaのバージョンを書き換えたい
 alias sdkjava11='sdk use java 11.0.27-amzn'
 
