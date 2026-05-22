@@ -28,10 +28,14 @@ return {
 
     local keymap = vim.keymap
 
-    keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Fuzzy find files in cwd" })
-    keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Fuzzy find recent files" })
-    keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Find string in cwd" })
-    keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
-    keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
+    keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "ファイル検索 (カレントディレクトリ)" })
+    keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "最近開いたファイルを検索" })
+    keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "文字列で全文検索" })
+    keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "カーソル下の文字列を検索" })
+    keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "TODOを検索" })
+
+    -- Scala / LSP シンボル検索の追加
+    keymap.set("n", "<leader>fm", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", { desc = "メソッド・クラス検索 (ワークスペース全体)" })
+    keymap.set("n", "<leader>fo", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "ファイル内のアウトライン表示" })
   end,
 }

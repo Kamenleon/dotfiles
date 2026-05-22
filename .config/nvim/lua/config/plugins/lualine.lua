@@ -57,6 +57,11 @@ return {
       sections = {
         lualine_x = {
           {
+            function()
+              return require("metals").status_line()
+            end,
+          },
+          {
             lazy_status.updates,
             cond = lazy_status.has_updates,
             color = { fg = "#ff9e64" },

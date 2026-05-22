@@ -21,48 +21,52 @@ return {
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
+        local client = vim.lsp.get_client_by_id(ev.data.client_id)
         -- Buffer local mappings.
         -- See `:help vim.lsp.*` for documentation on any of the below fucntions
         local opts = { buffer = ev.buf, silent = true }
 
         -- set keybinds
-        opts.desc = "Show LSP references"
+        opts.desc = "LSPの参照を表示 (どこで使われているか)"
         keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show definition, references
 
-        opts.desc = "Go to declaration"
-        keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
+        -- 宣言 (Declaration) がサポートされている場合のみキーマップを設定
+        if client.server_capabilities.declarationProvider then
+          opts.desc = "宣言へジャンプ"
+          keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+        end
 
-        opts.desc = "Show LSP definitions"
+        opts.desc = "LSPの定義を表示"
         keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts) -- show lsp definitions
 
-        opts.desc = "Show LSP implementations"
+        opts.desc = "LSPの実装を表示"
         keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
 
-        opts.desc = "Show LSP type definitions"
+        opts.desc = "LSPの型定義を表示"
         keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
 
-        opts.desc = "See available code actions"
+        opts.desc = "コードアクションを表示 (修正案など)"
         keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
 
-        opts.desc = "Smart rename"
+        opts.desc = "名前変更 (リファクタリング)"
         keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
 
-        opts.desc = "Show buffer diagnostics"
+        opts.desc = "バッファ内の診断を表示"
         keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file
 
-        opts.desc = "Show line diagnostics"
+        opts.desc = "現在の行の診断を表示"
         keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
 
-        opts.desc = "Go to previous diagnostic"
+        opts.desc = "前の診断へジャンプ"
         keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
 
-        opts.desc = "Go to next diagnostic"
+        opts.desc = "次の診断へジャンプ"
         keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
 
-        opts.desc = "Show documentation for what is under cursor"
+        opts.desc = "カーソル下のドキュメントを表示"
         keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
 
-        opts.desc = "Restart LSP"
+        opts.desc = "LSPを再起動"
         keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
       end,
     })

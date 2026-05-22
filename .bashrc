@@ -41,6 +41,10 @@ alias gsw='git switch'
 alias docps='docker ps'
 alias docstopall='docker stop $(docker ps -q)'
 
+# bashの設定を変えたい
+alias nbash='cd ~/dotfiles/;nvim .bashrc'
+alias nbashp='cd ~/dotfiles/;nvim .config/bashrc_private'
+
 # SDKMANで、Javaのバージョンを書き換えたい
 alias sdkjava11='sdk use java 11.0.27-amzn'
 

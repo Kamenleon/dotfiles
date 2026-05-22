@@ -21,7 +21,6 @@ return {
     -- lspを入れる際に設定するところ
     local ensure_installed = {
       "lua_ls",
-      "metals",
     }
 
     require 'mason-lspconfig'.setup {
