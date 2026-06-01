@@ -37,5 +37,8 @@ return {
     -- Scala / LSP シンボル検索の追加
     keymap.set("n", "<leader>fm", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", { desc = "メソッド・クラス検索 (ワークスペース全体)" })
     keymap.set("n", "<leader>fo", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "ファイル内のアウトライン表示" })
+
+    -- Git 関連の検索を追加
+    keymap.set("n", "<leader>gc", "<cmd>Telescope git_bcommits<cr>", { desc = "このファイルのコミット履歴 (簡易版)" })
   end,
 }

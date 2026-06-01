@@ -28,7 +28,11 @@ return {
 
         -- set keybinds
         opts.desc = "LSPの参照を表示 (どこで使われているか)"
-        keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show definition, references
+        keymap.set("n", "gR", function()
+          require("telescope.builtin").lsp_references({
+            reuse_win = true,
+          })
+        end, opts) -- show definition, references
 
         -- 宣言 (Declaration) がサポートされている場合のみキーマップを設定
         if client.server_capabilities.declarationProvider then
@@ -37,13 +41,13 @@ return {
         end
 
         opts.desc = "LSPの定義を表示"
-        keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts) -- show lsp definitions
+        keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- show lsp definitions
 
         opts.desc = "LSPの実装を表示"
-        keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
+        keymap.set("n", "gi", vim.lsp.buf.implementation, opts) -- show lsp implementations
 
         opts.desc = "LSPの型定義を表示"
-        keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
+        keymap.set("n", "gt", vim.lsp.buf.type_definition, opts) -- show lsp type definitions
 
         opts.desc = "コードアクションを表示 (修正案など)"
         keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
