@@ -17,7 +17,7 @@ alias mkdir='mkdir -p'
 alias pwdo='explorer.exe .'
 
 # プロンプトの表示をカスタマイズする
-export PS1='\[\033[01;32m\]\u\[\033[01;34m\] \w \$\[\033[00m\]'
+export PS1='\[\033[01;32m\]\u\[\033[01;36m\] \w \$\[\033[00m\]'
 
 # cd系の設定
 alias ..='cd ..'
