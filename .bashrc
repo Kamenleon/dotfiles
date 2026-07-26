@@ -71,3 +71,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+
+# 摩擦ジャーナル: `fj <一言>` で日時付きで ~/friction-journal.md に追記
+fj() { printf '%s %s\n' "$(date '+%m-%d %H:%M')" "$*" >> ~/friction-journal.md; }
