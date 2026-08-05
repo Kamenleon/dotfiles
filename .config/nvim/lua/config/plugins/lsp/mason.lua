@@ -24,8 +24,10 @@ return {
     }
 
     require 'mason-lspconfig'.setup {
-      automatic_installation = true,
       ensure_installed = ensure_installed, -- 自動でインストールしたいlangage server
+      -- v2 の既定では導入済みサーバを自動で vim.lsp.enable() するが、
+      -- metals は nvim-metals が管理しているので衝突を避けて明示的に有効化する
+      automatic_enable = false,
     }
 
     -- language serverの設定をする
