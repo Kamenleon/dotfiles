@@ -11,6 +11,20 @@ return {
     local telescope = require("telescope")
     local actions = require("telescope.actions")
 
+    -- telescope 0.1.x は vim.lsp.util.symbols_to_items() を position_encoding なしで呼ぶ。
+    -- Neovim 0.11 はその場合 current buffer から encoding を引くため、
+    -- Telescope のプロンプトバッファ (LSP 未アタッチ) がカレントになる
+    -- lsp_dynamic_workspace_symbols では nil 参照で落ちていた。
+    -- 渡された bufnr 側から encoding を解決して回避する。
+    local symbols_to_items = vim.lsp.util.symbols_to_items
+    vim.lsp.util.symbols_to_items = function(symbols, bufnr, encoding)
+      if encoding == nil then
+        local client = vim.lsp.get_clients({ bufnr = bufnr or 0 })[1]
+        encoding = client and client.offset_encoding or "utf-16"
+      end
+      return symbols_to_items(symbols, bufnr, encoding)
+    end
+
     telescope.setup({
       defaults = {
         path_display = { "smart" },
