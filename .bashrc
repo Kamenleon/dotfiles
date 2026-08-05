@@ -58,7 +58,7 @@ HISTSIZE=1000000
 HISTFILESIZE=1000000
 
 # パス設定
-export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+export PATH="$PATH:$HOME/.local/nvim-linux-x86_64/bin"
 
 ## THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
