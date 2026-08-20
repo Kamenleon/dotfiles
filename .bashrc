@@ -66,6 +66,10 @@ case ":$PATH:" in
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
 case ":$PATH:" in
+  *":$HOME/.bin:"*) ;;
+  *) export PATH="$HOME/.bin:$PATH" ;;
+esac
+case ":$PATH:" in
   *":/opt/nvim-linux-x86_64/bin:"*) ;;
   *) export PATH="$PATH:/opt/nvim-linux-x86_64/bin" ;;
 esac

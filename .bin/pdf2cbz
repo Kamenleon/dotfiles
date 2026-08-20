@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+# pdf2cbz - PDF を CBZ に変換する
+#
+# ホストに poppler-utils と zip があればそれを使い、無ければ Docker で
+# 専用の小さなイメージ (pdf2cbz-tools) を一度だけ組み立てて使います。
+# どちらも無い場合はその旨を表示して終了します。
+#
+# 1ページが1枚の画像でできている「自炊」PDF は、埋め込み画像をそのまま
+# 取り出すので再エンコードが起きません（無劣化・高速）。条件を満たさない
+# PDF はページを描画し直す方式に自動で切り替わります。
+set -uo pipefail
+
+VERSION=1.0.0
+IMAGE=pdf2cbz-tools:1
+
+MODE=auto
+DPI=300
+QUALITY=90
+IN_PLACE=0
+DRY_RUN=0
+FORCE=0
+
+usage() {
+	cat <<'USAGE'
+pdf2cbz - PDF を CBZ に変換する
+
+  使い方:
+    pdf2cbz [オプション] <PDF|ディレクトリ> [出力ディレクトリ]
+
+  引数:
+    <PDF|ディレクトリ>   変換元。ディレクトリなら再帰的に *.pdf を処理します
+    [出力ディレクトリ]   省略時は変換元と同じ場所。サブフォルダ構成は再現されます
+
+  オプション:
+    -m, --mode MODE    auto (既定) / extract / render
+                         auto    … 可能なら無劣化で取り出し、無理なら描画に切替
+                         extract … 埋め込み画像の取り出しのみ（不可なら失敗）
+                         render  … 常にページを描画し直す
+    -r, --dpi DPI      描画時の解像度 (既定: 300)
+    -q, --quality N    描画時の JPEG 品質 1-100 (既定: 90)
+    -i, --in-place     変換に成功した PDF を削除して置き換える
+                       （ページ数の照合に成功した場合のみ削除します）
+    -n, --dry-run      実際には変換せず、対象と実行内容だけ表示する
+    -f, --force        既に CBZ がある場合も上書きする（既定はスキップ）
+    -h, --help         このヘルプ
+    -V, --version      バージョン
+
+  例:
+    pdf2cbz ~/books                    # 変換して元の PDF は残す
+    pdf2cbz -i ~/books                 # 変換して元の PDF を置き換える
+    pdf2cbz -n -i ~/books              # 置き換える前に対象を確認する
+    pdf2cbz ~/books ~/books_cbz        # 別の場所に出力する
+    pdf2cbz -m render -r 200 a.pdf     # 解像度を下げて描画変換する
+USAGE
+}
+
+die() { echo "pdf2cbz: $*" >&2; exit 1; }
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-m|--mode)     MODE="${2:-}"; shift 2 ;;
+		-r|--dpi)      DPI="${2:-}"; shift 2 ;;
+		-q|--quality)  QUALITY="${2:-}"; shift 2 ;;
+		-i|--in-place) IN_PLACE=1; shift ;;
+		-n|--dry-run)  DRY_RUN=1; shift ;;
+		-f|--force)    FORCE=1; shift ;;
+		-h|--help)     usage; exit 0 ;;
+		-V|--version)  echo "pdf2cbz $VERSION"; exit 0 ;;
+		--)            shift; break ;;
+		-*)            die "不明なオプション: $1 (--help でヘルプ)" ;;
+		*)             break ;;
+	esac
+done
+
+[ $# -ge 1 ] || { usage >&2; exit 1; }
+case "$MODE" in auto|extract|render) ;; *) die "--mode は auto / extract / render のいずれか" ;; esac
+[[ "$DPI" =~ ^[0-9]+$ ]] || die "--dpi は数値で指定してください"
+[[ "$QUALITY" =~ ^[0-9]+$ ]] && [ "$QUALITY" -ge 1 ] && [ "$QUALITY" -le 100 ] || die "--quality は 1-100"
+
+INPUT=$(readlink -f "$1") || die "入力を解決できません: $1"
+[ -e "$INPUT" ] || die "入力が見つかりません: $1"
+
+if [ -d "$INPUT" ]; then
+	SRC_ROOT="$INPUT"; TARGET=""
+else
+	SRC_ROOT=$(dirname "$INPUT"); TARGET=$(basename "$INPUT")
+	[[ "$TARGET" == *.[pP][dD][fF] ]] || die "PDF ではありません: $1"
+fi
+
+if [ $# -ge 2 ]; then
+	DST_ROOT=$(readlink -f "$2")
+	[ "$IN_PLACE" = 1 ] && [ "$DST_ROOT" != "$SRC_ROOT" ] && die "--in-place と出力ディレクトリは同時に指定できません"
+else
+	DST_ROOT="$SRC_ROOT"
+fi
+mkdir -p "$DST_ROOT" || die "出力ディレクトリを作成できません: $DST_ROOT"
+
+# 変換の本体。ホストでも Docker の中でも同じものを実行する。
+# 受け取る環境変数: MODE DPI QUALITY SRC_ROOT DST_ROOT TARGET IN_PLACE DRY_RUN FORCE
+read -r -d '' WORKER <<'WORKER_EOF'
+set -uo pipefail
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# アーカイブ作成/内容数の取得。7z があれば使い、無ければ zip/unzip を使う。
+# JPEG は圧縮済みなので無圧縮で格納する（サイズはほぼ同じで格段に速い）。
+archive_create() { # $1=出力 $2=対象ディレクトリ
+	if have 7z; then
+		( cd "$2" && 7z a -tzip -mx=0 "$1" . >/dev/null )
+	else
+		( cd "$2" && zip -0 -q -X -r "$1" . )
+	fi
+}
+archive_count() { # $1=アーカイブ
+	if have 7z; then
+		7z l -ba "$1" 2>/dev/null | wc -l
+	else
+		unzip -Z1 "$1" 2>/dev/null | wc -l
+	fi
+}
+
+is_supported_ext() {
+	case "$(printf '%s' "${1##*.}" | tr 'A-Z' 'a-z')" in
+		jpg|jpeg|png|webp|bmp) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+# ページ画像を「総ページ数に合わせたゼロ埋め連番」に統一する。
+# ビューアは名前順でページを並べるため、桁数が揃っていないと
+# 1000 ページ超で page10 < page9 となり順序が崩れる。
+renumber() { # $1=作業ディレクトリ $2=総ページ数
+	local dir="$1" total="$2" width i=0 f ext files=()
+	width=${#total}
+	[ "$width" -lt 3 ] && width=3
+	mapfile -t files < <(find "$dir" -maxdepth 1 -type f | sort -V)
+	for f in "${files[@]}"; do
+		i=$((i + 1))
+		ext="${f##*.}"
+		mv "$f" "$dir/$(printf "page_%0${width}d.%s" "$i" "$ext")"
+	done
+}
+
+render_pages() { # $1=PDF $2=作業ディレクトリ
+	pdftoppm -jpeg -jpegopt quality="$QUALITY" -r "$DPI" "$1" "$2/raw"
+}
+
+extract_pages() { # $1=PDF $2=作業ディレクトリ  … 埋め込み画像を無劣化で取り出す
+	local src="$1" work="$2" pages list imgs got files=() i=0 f
+	pages=$(pdfinfo "$src" 2>/dev/null | awk '/^Pages:/ {print $2}')
+	[ -n "$pages" ] || return 1
+
+	list=$(pdfimages -list "$src" 2>/dev/null | tail -n +3)
+	imgs=$(printf '%s\n' "$list" | grep -c .)
+	# 1ページ1画像でなければページとの対応が取れないので取り出しは使えない
+	[ "$imgs" = "$pages" ] || return 1
+	printf '%s\n' "$list" | awk '{print $1}' | sort | uniq -c | awk '$1>1{f=1} END{exit !f}' && return 1
+
+	pdfimages -all "$src" "$work/raw" || return 1
+
+	# pdfimages -all は ccitt/jbig2 画像を「本体 + .params のサイドカー」の
+	# 2ファイルで書き出す。残すとページ数と食い違い、番号の対応がずれる。
+	find "$work" -maxdepth 1 -type f -name '*.params' -delete
+	got=$(find "$work" -maxdepth 1 -type f | wc -l)
+	[ "$got" = "$pages" ] || return 1
+
+	# 差し替えで新しいファイルを作るとループ中の find がそれを拾うため、
+	# 先に一覧を確定させてから処理する
+	mapfile -t files < <(find "$work" -maxdepth 1 -type f | sort -V)
+	for f in "${files[@]}"; do
+		i=$((i + 1))
+		# ビューアが扱えない形式(.ccitt 等)のページだけ描画し直して差し替える。
+		# そのままではページが丸ごと欠落する。
+		if ! is_supported_ext "$f"; then
+			rm -f "$f"
+			pdftoppm -jpeg -jpegopt quality="$QUALITY" -r "$DPI" -f "$i" -l "$i" "$src" "${f%.*}_r" || return 1
+		fi
+	done
+	return 0
+}
+
+convert_one() { # $1=PDFの絶対パス $2=SRC_ROOT からの相対パス
+	local src="$1" rel="$2"
+	local base out dir work pages n used
+
+	base=$(basename "$rel"); base="${base%.[pP][dD][fF]}"
+	dir=$(dirname "$rel")
+	out="$DST_ROOT/$dir/${base}.cbz"
+
+	if [ -e "$out" ] && [ "$FORCE" != 1 ]; then
+		echo "  スキップ (既に存在): $dir/${base}.cbz"
+		return 0
+	fi
+	if pdfinfo "$src" 2>/dev/null | grep -q '^Encrypted: *yes'; then
+		echo "  スキップ (暗号化): $rel"
+		return 0
+	fi
+
+	pages=$(pdfinfo "$src" 2>/dev/null | awk '/^Pages:/ {print $2}')
+	if [ -z "$pages" ]; then
+		echo "  失敗 (PDF として読めません): $rel" >&2
+		return 1
+	fi
+
+	if [ "$DRY_RUN" = 1 ]; then
+		local act="変換"
+		[ "$IN_PLACE" = 1 ] && act="変換して元PDFを削除"
+		echo "  [dry-run] $act: $rel (${pages}ページ) -> $dir/${base}.cbz"
+		return 0
+	fi
+
+	mkdir -p "$DST_ROOT/$dir" || return 1
+	work=$(mktemp -d) || return 1
+	used=""
+
+	if [ "$MODE" = render ]; then
+		render_pages "$src" "$work" && used=render
+	else
+		if extract_pages "$src" "$work"; then
+			used=extract
+		elif [ "$MODE" = auto ]; then
+			rm -rf "$work"; work=$(mktemp -d) || return 1
+			render_pages "$src" "$work" && used=render
+		fi
+	fi
+
+	n=$(find "$work" -maxdepth 1 -type f | wc -l)
+	if [ -z "$used" ] || [ "$n" -eq 0 ]; then
+		echo "  失敗: $rel" >&2
+		rm -rf "$work"
+		return 1
+	fi
+
+	renumber "$work" "$pages"
+	rm -f "$work.cbz"
+	if ! archive_create "$work.cbz" "$work"; then
+		echo "  失敗 (アーカイブ作成): $rel" >&2
+		rm -rf "$work" "$work.cbz"
+		return 1
+	fi
+
+	# 元 PDF を消す前に、ページ数が一致しているか必ず確かめる
+	local in_archive
+	in_archive=$(archive_count "$work.cbz")
+	if [ "$in_archive" != "$pages" ]; then
+		echo "  失敗 (ページ数不一致 PDF=${pages} CBZ=${in_archive}): $rel" >&2
+		rm -rf "$work" "$work.cbz"
+		return 1
+	fi
+
+	mv "$work.cbz" "$out" || { rm -rf "$work" "$work.cbz"; return 1; }
+	rm -rf "$work"
+
+	local note=""
+	if [ "$IN_PLACE" = 1 ]; then
+		if rm -f "$src"; then
+			note="  元PDF削除"
+		else
+			note="  ※元PDFを削除できませんでした"
+		fi
+	fi
+	echo "  完了: $dir/${base}.cbz  [$used] ${pages}ページ  $(du -h "$out" | cut -f1)${note}"
+}
+
+ok=0; ng=0
+if [ -n "$TARGET" ]; then
+	convert_one "$SRC_ROOT/$TARGET" "$TARGET" && ok=$((ok+1)) || ng=$((ng+1))
+else
+	while IFS= read -r -d '' f; do
+		convert_one "$f" "${f#$SRC_ROOT/}" && ok=$((ok+1)) || ng=$((ng+1))
+	done < <(find "$SRC_ROOT" -type f -iname '*.pdf' -print0 | sort -z)
+	[ $((ok+ng)) -eq 0 ] && echo "  PDF が見つかりませんでした"
+fi
+echo "----"
+echo "成功: ${ok}件  失敗: ${ng}件"
+[ "$ng" -eq 0 ]
+WORKER_EOF
+
+host_tools_ok() {
+	command -v pdfinfo >/dev/null 2>&1 &&
+	command -v pdfimages >/dev/null 2>&1 &&
+	command -v pdftoppm >/dev/null 2>&1 &&
+	{ command -v 7z >/dev/null 2>&1 || { command -v zip >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1; }; }
+}
+
+ensure_image() {
+	docker image inspect "$IMAGE" >/dev/null 2>&1 && return 0
+	echo "変換用イメージを組み立てています (初回のみ)..." >&2
+	docker build -q -t "$IMAGE" - >/dev/null <<'DOCKERFILE'
+FROM debian:stable-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      poppler-utils zip unzip \
+    && rm -rf /var/lib/apt/lists/*
+DOCKERFILE
+}
+
+if host_tools_ok; then
+	MODE="$MODE" DPI="$DPI" QUALITY="$QUALITY" \
+	SRC_ROOT="$SRC_ROOT" DST_ROOT="$DST_ROOT" TARGET="$TARGET" \
+	IN_PLACE="$IN_PLACE" DRY_RUN="$DRY_RUN" FORCE="$FORCE" \
+	bash -c "$WORKER"
+	exit $?
+fi
+
+command -v docker >/dev/null 2>&1 || die "poppler-utils / zip も docker も見つかりません。
+  Debian/Ubuntu: sudo apt install poppler-utils zip unzip
+  macOS:         brew install poppler zip
+のいずれかを入れるか、docker を使える状態にしてください。"
+
+ensure_image || die "変換用イメージを組み立てられませんでした"
+
+# --in-place のときは元 PDF を消すため読み書き可能にする。それ以外は読み取り専用。
+SRC_MOUNT="ro"
+[ "$IN_PLACE" = 1 ] && SRC_MOUNT="rw"
+
+if [ "$SRC_ROOT" = "$DST_ROOT" ]; then
+	docker run --rm -i \
+		-v "$SRC_ROOT":/src:rw \
+		-e MODE="$MODE" -e DPI="$DPI" -e QUALITY="$QUALITY" \
+		-e SRC_ROOT=/src -e DST_ROOT=/src -e TARGET="$TARGET" \
+		-e IN_PLACE="$IN_PLACE" -e DRY_RUN="$DRY_RUN" -e FORCE="$FORCE" \
+		"$IMAGE" bash -s <<<"$WORKER"
+else
+	docker run --rm -i \
+		-v "$SRC_ROOT":/src:"$SRC_MOUNT" \
+		-v "$DST_ROOT":/dst:rw \
+		-e MODE="$MODE" -e DPI="$DPI" -e QUALITY="$QUALITY" \
+		-e SRC_ROOT=/src -e DST_ROOT=/dst -e TARGET="$TARGET" \
+		-e IN_PLACE="$IN_PLACE" -e DRY_RUN="$DRY_RUN" -e FORCE="$FORCE" \
+		"$IMAGE" bash -s <<<"$WORKER"
+fi
