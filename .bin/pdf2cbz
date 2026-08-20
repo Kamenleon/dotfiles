@@ -51,6 +51,21 @@ pdf2cbz - PDF を CBZ に変換する
     pdf2cbz -n -i ~/books              # 置き換える前に対象を確認する
     pdf2cbz ~/books ~/books_cbz        # 別の場所に出力する
     pdf2cbz -m render -r 200 a.pdf     # 解像度を下げて描画変換する
+
+  実行環境:
+    ホストに poppler-utils と zip があればそれを使います。無ければ Docker で
+    専用イメージ (pdf2cbz-tools) を初回だけ組み立てて使います。どちらも無い
+    場合は導入方法を表示して終了します。
+      Debian/Ubuntu: sudo apt install poppler-utils zip unzip
+      macOS:         brew install poppler zip
+
+  終了コード:
+    0 = 全件成功 / 1 = 引数エラー、または失敗した PDF が 1 件以上ある
+
+  補足:
+    暗号化された PDF はスキップします。--in-place は、生成した CBZ の
+    ページ数が元 PDF のページ数と一致した場合にだけ元ファイルを削除します。
+    変換に失敗した PDF は削除されません。
 USAGE
 }
 
