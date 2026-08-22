@@ -8,7 +8,7 @@
 2. 設定を展開する
 
 ```bash
- source ./.bin/install.sh
+bash ./.bin/install.sh
 ```
 
 ## 設定を追加した時
