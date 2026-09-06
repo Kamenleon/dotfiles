@@ -28,6 +28,7 @@ export PS1='\[\033[01;32m\]\u\[\033[01;36m\] \w \$\[\033[00m\]'
 alias ..='cd ..'
 alias ..2='cd ../..'
 alias ..3='cd ../../..'
+alias cdtsumugi='cd "$HOME/tsumugi"'
 
 # git系
 alias g='git'

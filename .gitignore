@@ -72,6 +72,7 @@
 !/.xsessionrc
 !/.config/
 !/.config/nvim
+/.config/bashrc_private
 !/.gitignore_global
 !/.gitconfig_shared
 
