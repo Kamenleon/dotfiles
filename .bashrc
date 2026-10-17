@@ -61,7 +61,15 @@ HISTSIZE=1000000
 HISTFILESIZE=1000000
 
 # パス設定
-export PATH="$PATH:$HOME/.local/nvim-linux-x86_64/bin"
+# Neovim公式ビルド (~/.local/nvim-linux-<arch>) をaptの古いnvimより優先する
+case "$(uname -m)" in
+  aarch64|arm64) NVIM_ARCH=arm64 ;;
+  *) NVIM_ARCH=x86_64 ;;
+esac
+case ":$PATH:" in
+  *":$HOME/.local/nvim-linux-$NVIM_ARCH/bin:"*) ;;
+  *) export PATH="$HOME/.local/nvim-linux-$NVIM_ARCH/bin:$PATH" ;;
+esac
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) export PATH="$HOME/.local/bin:$PATH" ;;
@@ -71,9 +79,10 @@ case ":$PATH:" in
   *) export PATH="$HOME/.bin:$PATH" ;;
 esac
 case ":$PATH:" in
-  *":/opt/nvim-linux-x86_64/bin:"*) ;;
-  *) export PATH="$PATH:/opt/nvim-linux-x86_64/bin" ;;
+  *":/opt/nvim-linux-$NVIM_ARCH/bin:"*) ;;
+  *) export PATH="$PATH:/opt/nvim-linux-$NVIM_ARCH/bin" ;;
 esac
+unset NVIM_ARCH
 
 ## THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
