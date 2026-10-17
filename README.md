@@ -31,3 +31,5 @@ bash ./.bin/install.sh
 [ローカルからSSH鍵を使ってGithubにデプロイする方法](https://kamenleon.github.io/for-blog/p/%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%81%8B%E3%82%89ssh%E9%8D%B5%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6github%E3%81%AB%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/)
 
 環境変数などの設定は、`.config/bashrc_private`に記述することで、PCごとのフルパス設定などをGit管理から外すことができる。
+
+`bashrc_private` や `~/.ssh/config` は非公開リポジトリ `dotfiles-private` で管理している。`~/dotfiles-private` に clone しておけば、`install.sh` 実行時に自動でシンボリックリンクが張られる。

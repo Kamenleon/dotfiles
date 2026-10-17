@@ -24,7 +24,8 @@
 !/.zshrc
 !/.zshenv
 !/.zfunc/
-/.zfunc/**  # ディレクトリは管理したいけど中身はいらないときはこんな感じ
+# ディレクトリは管理したいけど中身はいらないときはこんな感じ
+/.zfunc/**
 !/.zsh/
 !/.zsh/dircolors
 !/.zsh/rc/
@@ -73,6 +74,8 @@
 !/.config/
 !/.config/nvim
 /.config/bashrc_private
+# gh の認証トークンが入るため除外
+/.config/gh/
 !/.gitignore_global
 !/.gitconfig_shared
 

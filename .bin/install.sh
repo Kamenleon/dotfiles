@@ -51,4 +51,6 @@ done
 
 link_to_homedir
 git config --global include.path "$HOME/.gitconfig_shared"
+# 非公開設定リポジトリがあれば展開する
+[ -f "$HOME/dotfiles-private/install.sh" ] && bash "$HOME/dotfiles-private/install.sh"
 command echo -e "\e[1;36m Install completed!!!! \e[m"
