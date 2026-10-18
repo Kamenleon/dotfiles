@@ -4,11 +4,31 @@
 
 ## 利用方法
 
-1. Cloneする
-2. 設定を展開する
+1. SSH鍵を作り、GitHub に登録する（鍵は持ち回らず PC ごとに作り直す）
 
 ```bash
-bash ./.bin/install.sh
+ssh-keygen -t ed25519
+```
+
+GitHub の Settings → SSH and GPG keys から `~/.ssh/id_ed25519.pub` を登録する。
+
+2. Cloneする（非公開設定リポジトリも一緒に）
+
+```bash
+git clone git@github.com:Kamenleon/dotfiles.git ~/dotfiles
+git clone git@github.com:Kamenleon/dotfiles-private.git ~/dotfiles-private
+```
+
+3. 設定を展開する（`~/dotfiles-private` があれば `bashrc_private` と `~/.ssh/config` も展開される）
+
+```bash
+bash ~/dotfiles/.bin/install.sh
+```
+
+4. LAN内サーバーに公開鍵を登録する（接続先は `~/.ssh/config` で管理）
+
+```bash
+ssh-copy-id ras
 ```
 
 ## 設定を追加した時
