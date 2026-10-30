@@ -104,3 +104,7 @@ export NVM_DIR="$HOME/.nvm"
 # 摩擦ジャーナル: `fj <一言>` で日時付きで ~/friction-journal.md に追記
 fj() { printf '%s %s\n' "$(date '+%m-%d %H:%M')" "$*" >> ~/friction-journal.md; }
 
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
