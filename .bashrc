@@ -35,7 +35,6 @@ fi
 alias ..='cd ..'
 alias ..2='cd ../..'
 alias ..3='cd ../../..'
-alias cdtsumugi='cd "$HOME/tsumugi"'
 
 # git系
 alias g='git'

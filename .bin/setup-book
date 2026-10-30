@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# setup-book - 蔵書ディレクトリへのリンクと移動用エイリアスを用意する
+#
+# ~/book を蔵書の実体ディレクトリへの symlink にし、bashrc_private に
+# `cdbook` エイリアスを追記します。何度実行しても結果は同じです。
+set -uo pipefail
+
+LINK="$HOME/book"
+PRIVATE_RC="$HOME/.config/bashrc_private"
+ALIAS_LINE='alias cdbook='\''cd "$HOME/book"'\'''
+
+usage() {
+	cat <<'USAGE'
+setup-book - 蔵書ディレクトリへのリンクと移動用エイリアスを用意する
+
+  使い方:
+    setup-book [蔵書の実体ディレクトリ]
+
+  引数:
+    蔵書の実体ディレクトリ   省略時は /mnt/ssd/Book
+
+  やること:
+    1. ~/book を実体ディレクトリへの symlink にする
+    2. ~/.config/bashrc_private に `alias cdbook` を追記する（既にあれば何もしない）
+
+  オプション:
+    -h, --help   このヘルプを表示する
+USAGE
+}
+
+case "${1:-}" in
+-h | --help)
+	usage
+	exit 0
+	;;
+esac
+
+target="${1:-/mnt/ssd/Book}"
+
+if [[ ! -d "$target" ]]; then
+	echo "setup-book: ディレクトリが見つかりません: $target" >&2
+	exit 1
+fi
+
+# 実体のディレクトリを symlink で上書きしてしまわないように止める
+if [[ -e "$LINK" && ! -L "$LINK" ]]; then
+	echo "setup-book: $LINK が symlink ではないので中止します" >&2
+	exit 1
+fi
+
+ln -snf "$target" "$LINK"
+echo "リンク: $LINK -> $target"
+
+if [[ -f "$PRIVATE_RC" ]] && grep -qF "$ALIAS_LINE" "$PRIVATE_RC"; then
+	echo "エイリアス: 追記済み ($PRIVATE_RC)"
+else
+	printf '%s\n' "$ALIAS_LINE" >>"$PRIVATE_RC"
+	echo "エイリアス: 追記しました ($PRIVATE_RC)"
+	echo "今のシェルで使うには: source ~/.bashrc"
+fi

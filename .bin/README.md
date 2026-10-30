@@ -18,6 +18,7 @@ chmod +x .bin/<スクリプト名>
 |---|---|
 | [`install.sh`](#installsh) | dotfiles をホームに展開する |
 | [`pdf2cbz`](#pdf2cbz) | PDF を CBZ（画像アーカイブ）に変換する |
+| [`setup-book`](#setup-book) | `~/book` のリンクと `cdbook` エイリアスを用意する |
 
 ---
 
@@ -145,3 +146,19 @@ brew install poppler zip                   # macOS
   ページが丸ごと欠落する。
 - **1ページに複数の画像がある PDF では `extract` を使わない。** 画像とページの対応が
   取れず順序を保証できないため、`auto` では `render` に落とす。
+
+---
+
+## setup-book
+
+蔵書ディレクトリへの symlink `~/book` を作り、`~/.config/bashrc_private` に
+`cdbook` エイリアスを追記する。PC ごとに実体の場所が違うため、エイリアスは
+Git 管理の `.bashrc` ではなく bashrc_private 側に置いている。
+
+```bash
+setup-book                    # /mnt/ssd/Book を使う
+setup-book /path/to/Book      # 実体の場所を指定する
+```
+
+何度実行しても同じ結果になる。`~/book` が symlink ではない実ディレクトリの場合は
+上書きせずに中止する。
